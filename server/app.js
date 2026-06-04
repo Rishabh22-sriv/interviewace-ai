@@ -17,6 +17,10 @@ const userRoutes = require('./routes/user');
 const interviewRoutes = require('./routes/interview');
 const resumeRoutes = require('./routes/resume');
 const adminRoutes = require('./routes/admin');
+const placementRoutes = require('./routes/placement');
+const communityRoutes = require('./routes/community');
+const notificationRoutes = require('./routes/notifications');
+const progressRoutes = require('./routes/progress');
 
 // Initialize app
 const app = express();
@@ -110,6 +114,10 @@ app.use('/api/user', userRoutes);
 app.use('/api/interview', interviewRoutes);
 app.use('/api/resume', resumeRoutes);
 app.use('/api/admin', adminRoutes);
+app.use('/api/placement', placementRoutes);
+app.use('/api/community', communityRoutes);
+app.use('/api/notifications', notificationRoutes);
+app.use('/api/progress', progressRoutes);
 
 // 404 handler
 app.use('{*path}', (req, res) => {

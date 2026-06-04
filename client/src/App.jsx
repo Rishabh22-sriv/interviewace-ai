@@ -5,7 +5,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import FloatingAIWidget from './components/FloatingAIWidget';
 import DashboardLayout from './layouts/DashboardLayout';
 
-// Pages
+// Pages — Core
 import LandingPage from './pages/LandingPage';
 import LoginPage from './pages/LoginPage';
 import SignupPage from './pages/SignupPage';
@@ -20,6 +20,18 @@ import InterviewReportPage from './pages/InterviewReportPage';
 import ProfilePage from './pages/ProfilePage';
 import SettingsPage from './pages/SettingsPage';
 import AdminDashboard from './pages/AdminDashboard';
+
+// Pages — New Features
+import ResumeBuilder from './pages/ResumeBuilder';
+import PlacementTracker from './pages/PlacementTracker';
+import CompanyHub from './pages/CompanyHub';
+import CareerRoadmap from './pages/CareerRoadmap';
+import StudyAssistant from './pages/StudyAssistant';
+import ProjectRecommender from './pages/ProjectRecommender';
+import DSAHub from './pages/DSAHub';
+import CodingPractice from './pages/CodingPractice';
+import Community from './pages/Community';
+import JobPortal from './pages/JobPortal';
 
 const App = () => {
   return (
@@ -40,12 +52,8 @@ const App = () => {
               fontFamily: 'Inter, sans-serif',
               boxShadow: '0 8px 32px rgba(0, 0, 0, 0.3)',
             },
-            success: {
-              iconTheme: { primary: '#10B981', secondary: '#1E293B' },
-            },
-            error: {
-              iconTheme: { primary: '#EF4444', secondary: '#1E293B' },
-            },
+            success: { iconTheme: { primary: '#10B981', secondary: '#1E293B' } },
+            error: { iconTheme: { primary: '#EF4444', secondary: '#1E293B' } },
           }}
         />
 
@@ -66,6 +74,7 @@ const App = () => {
               </ProtectedRoute>
             }
           >
+            {/* Core */}
             <Route index element={<DashboardPage />} />
             <Route path="interview" element={<InterviewPage />} />
             <Route path="resume" element={<ResumeAnalyzer />} />
@@ -74,6 +83,18 @@ const App = () => {
             <Route path="report/:id" element={<InterviewReportPage />} />
             <Route path="profile" element={<ProfilePage />} />
             <Route path="settings" element={<SettingsPage />} />
+
+            {/* New Features */}
+            <Route path="resume-builder" element={<ResumeBuilder />} />
+            <Route path="placement" element={<PlacementTracker />} />
+            <Route path="companies" element={<CompanyHub />} />
+            <Route path="roadmap" element={<CareerRoadmap />} />
+            <Route path="study" element={<StudyAssistant />} />
+            <Route path="projects" element={<ProjectRecommender />} />
+            <Route path="dsa" element={<DSAHub />} />
+            <Route path="coding" element={<CodingPractice />} />
+            <Route path="community" element={<Community />} />
+            <Route path="jobs" element={<JobPortal />} />
           </Route>
 
           {/* Admin Routes */}

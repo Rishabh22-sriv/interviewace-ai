@@ -3,28 +3,50 @@ import { NavLink, useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useAuth } from '../context/AuthContext';
 import {
-  LayoutDashboard,
-  MessageSquare,
-  FileText,
-  BarChart3,
-  History,
-  User,
-  Settings,
-  LogOut,
-  Zap,
-  X,
-  Shield,
-  ChevronRight,
+  LayoutDashboard, MessageSquare, FileText, BarChart3, History,
+  User, Settings, LogOut, Zap, X, Shield, ChevronRight,
+  FileEdit, Target, Building2, Map, Brain, FolderGit2,
+  Code2, TreePine, Users, Briefcase,
 } from 'lucide-react';
 
-const navItems = [
-  { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
-  { to: '/dashboard/interview', icon: MessageSquare, label: 'AI Interviews' },
-  { to: '/dashboard/resume', icon: FileText, label: 'Resume Analyzer' },
-  { to: '/dashboard/analytics', icon: BarChart3, label: 'Analytics' },
-  { to: '/dashboard/history', icon: History, label: 'Interview History' },
-  { to: '/dashboard/profile', icon: User, label: 'Profile' },
-  { to: '/dashboard/settings', icon: Settings, label: 'Settings' },
+const navGroups = [
+  {
+    label: 'Main',
+    items: [
+      { to: '/dashboard', icon: LayoutDashboard, label: 'Dashboard' },
+      { to: '/dashboard/interview', icon: MessageSquare, label: 'AI Interviews' },
+      { to: '/dashboard/resume', icon: FileText, label: 'Resume Analyzer' },
+      { to: '/dashboard/resume-builder', icon: FileEdit, label: 'Resume Builder' },
+      { to: '/dashboard/analytics', icon: BarChart3, label: 'Analytics' },
+      { to: '/dashboard/history', icon: History, label: 'Interview History' },
+    ],
+  },
+  {
+    label: 'Practice',
+    items: [
+      { to: '/dashboard/dsa', icon: TreePine, label: 'DSA Hub' },
+      { to: '/dashboard/coding', icon: Code2, label: 'Coding Practice' },
+      { to: '/dashboard/study', icon: Brain, label: 'Study Assistant' },
+    ],
+  },
+  {
+    label: 'Career Tools',
+    items: [
+      { to: '/dashboard/placement', icon: Target, label: 'Placement Tracker' },
+      { to: '/dashboard/roadmap', icon: Map, label: 'Career Roadmap' },
+      { to: '/dashboard/projects', icon: FolderGit2, label: 'Project Ideas' },
+      { to: '/dashboard/companies', icon: Building2, label: 'Company Hub' },
+    ],
+  },
+  {
+    label: 'Explore',
+    items: [
+      { to: '/dashboard/community', icon: Users, label: 'Community' },
+      { to: '/dashboard/jobs', icon: Briefcase, label: 'Jobs & Internships' },
+      { to: '/dashboard/profile', icon: User, label: 'Profile' },
+      { to: '/dashboard/settings', icon: Settings, label: 'Settings' },
+    ],
+  },
 ];
 
 const adminItems = [
@@ -135,40 +157,46 @@ const Sidebar = ({ isOpen, onClose }) => {
 
       {/* Navigation */}
       <div style={{ flex: 1, overflow: 'auto' }}>
-        <p style={{ color: '#475569', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px', padding: '0 8px 8px', margin: 0 }}>
-          Main Menu
-        </p>
-        <nav style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
-          {navItems.map(({ to, icon: Icon, label }) => (
-            <NavLink
-              key={to}
-              to={to}
-              end={to === '/dashboard'}
-              style={({ isActive }) => ({
-                display: 'flex',
-                alignItems: 'center',
-                gap: 10,
-                padding: '10px 12px',
-                borderRadius: 10,
-                textDecoration: 'none',
-                fontSize: 13,
-                fontWeight: 500,
-                transition: 'all 0.2s',
-                color: isActive ? '#A5B4FC' : '#64748B',
-                background: isActive ? 'linear-gradient(135deg, rgba(124,58,237,0.15), rgba(99,102,241,0.08))' : 'transparent',
-                border: isActive ? '1px solid rgba(99,102,241,0.2)' : '1px solid transparent',
-              })}
-            >
-              {({ isActive }) => (
-                <>
-                  <Icon size={16} style={{ color: isActive ? '#7C3AED' : '#475569', flexShrink: 0 }} />
-                  {label}
-                  {isActive && (
-                    <ChevronRight size={14} style={{ marginLeft: 'auto', color: '#6366F1' }} />
+        <nav style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
+          {navGroups.map((group) => (
+            <div key={group.label} style={{ marginBottom: 8 }}>
+              <p style={{ color: '#374151', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1.2px', padding: '8px 8px 4px', margin: 0 }}>
+                {group.label}
+              </p>
+              {group.items.map(({ to, icon: Icon, label }) => (
+                <NavLink
+                  key={to}
+                  to={to}
+                  end={to === '/dashboard'}
+                  onClick={onClose}
+                  style={({ isActive }) => ({
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: 10,
+                    padding: '8px 12px',
+                    borderRadius: 9,
+                    textDecoration: 'none',
+                    fontSize: 13,
+                    fontWeight: 500,
+                    transition: 'all 0.2s',
+                    color: isActive ? '#A5B4FC' : '#64748B',
+                    background: isActive ? 'linear-gradient(135deg, rgba(124,58,237,0.15), rgba(99,102,241,0.08))' : 'transparent',
+                    border: isActive ? '1px solid rgba(99,102,241,0.2)' : '1px solid transparent',
+                    marginBottom: 1,
+                  })}
+                >
+                  {({ isActive }) => (
+                    <>
+                      <Icon size={15} style={{ color: isActive ? '#7C3AED' : '#475569', flexShrink: 0 }} />
+                      {label}
+                      {isActive && (
+                        <ChevronRight size={13} style={{ marginLeft: 'auto', color: '#6366F1' }} />
+                      )}
+                    </>
                   )}
-                </>
-              )}
-            </NavLink>
+                </NavLink>
+              ))}
+            </div>
           ))}
         </nav>
 
