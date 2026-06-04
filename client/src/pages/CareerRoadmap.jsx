@@ -2,9 +2,9 @@ import { useState, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Map, Zap, ChevronDown, CheckSquare, Square,
-  Book, Globe, Youtube, Code2, Award, Target,
+  Book, BookOpen, Globe, PlayCircle, Code2, Award, Target,
   Clock, Rocket, Layers, Database, Shield, Smartphone,
-  Server, Brain, GitBranch, Sparkles, ArrowRight,
+  Server, Brain, GitBranch, ArrowRight,
   CheckCircle2, Play
 } from 'lucide-react';
 
@@ -271,7 +271,7 @@ const ROADMAPS = {
 /* HELPER: resource icon                                               */
 /* ------------------------------------------------------------------ */
 const ResourceIcon = ({ type }) => {
-  if (type === 'YouTube') return <Youtube size={15} style={{ color: '#EF4444' }} />;
+  if (type === 'YouTube') return <PlayCircle size={15} style={{ color: '#EF4444' }} />;
   if (type === 'Docs') return <Book size={15} style={{ color: '#06B6D4' }} />;
   return <Globe size={15} style={{ color: '#10B981' }} />;
 };
