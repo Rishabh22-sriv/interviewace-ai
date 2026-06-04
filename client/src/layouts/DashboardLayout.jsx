@@ -1,29 +1,39 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Outlet } from 'react-router-dom';
 import Sidebar from '../components/Sidebar';
 import { Menu, Bell, Search } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { motion } from 'framer-motion';
 
+const SIDEBAR_WIDTH = 240;
+
 const DashboardLayout = () => {
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [isDesktop, setIsDesktop] = useState(window.innerWidth >= 1024);
   const { user } = useAuth();
+
+  useEffect(() => {
+    const handler = () => setIsDesktop(window.innerWidth >= 1024);
+    window.addEventListener('resize', handler);
+    return () => window.removeEventListener('resize', handler);
+  }, []);
 
   return (
     <div style={{ minHeight: '100vh', background: '#0A0F1E', display: 'flex' }}>
       {/* Sidebar */}
       <Sidebar isOpen={sidebarOpen} onClose={() => setSidebarOpen(false)} />
 
-      {/* Main Content */}
+      {/* Main Content — pushed right on desktop so sidebar doesn't overlap */}
       <main
         style={{
           flex: 1,
-          marginLeft: 0,
           minHeight: '100vh',
           display: 'flex',
           flexDirection: 'column',
+          marginLeft: isDesktop ? SIDEBAR_WIDTH : 0,
+          transition: 'margin-left 0.3s ease',
+          minWidth: 0, // prevent overflow
         }}
-        className="lg:ml-[240px]"
       >
         {/* Top Header */}
         <header
@@ -43,21 +53,22 @@ const DashboardLayout = () => {
           }}
         >
           {/* Mobile menu toggle */}
-          <button
-            onClick={() => setSidebarOpen(true)}
-            style={{
-              background: 'rgba(99,102,241,0.1)',
-              border: '1px solid rgba(99,102,241,0.2)',
-              borderRadius: 8,
-              padding: 8,
-              color: '#A5B4FC',
-              cursor: 'pointer',
-              flexShrink: 0,
-            }}
-            className="lg:hidden"
-          >
-            <Menu size={18} />
-          </button>
+          {!isDesktop && (
+            <button
+              onClick={() => setSidebarOpen(true)}
+              style={{
+                background: 'rgba(99,102,241,0.1)',
+                border: '1px solid rgba(99,102,241,0.2)',
+                borderRadius: 8,
+                padding: 8,
+                color: '#A5B4FC',
+                cursor: 'pointer',
+                flexShrink: 0,
+              }}
+            >
+              <Menu size={18} />
+            </button>
+          )}
 
           {/* Search bar */}
           <div
