@@ -21,7 +21,7 @@ import ProfilePage from './pages/ProfilePage';
 import SettingsPage from './pages/SettingsPage';
 import AdminDashboard from './pages/AdminDashboard';
 
-// Pages — New Features
+// Pages — Phase 2 Features
 import ResumeBuilder from './pages/ResumeBuilder';
 import PlacementTracker from './pages/PlacementTracker';
 import CompanyHub from './pages/CompanyHub';
@@ -33,11 +33,29 @@ import CodingPractice from './pages/CodingPractice';
 import Community from './pages/Community';
 import JobPortal from './pages/JobPortal';
 
+// Pages — Branding & Career Intelligence
+import PortfolioReview from './pages/PortfolioReview';
+import LinkedInOptimizer from './pages/LinkedInOptimizer';
+import PersonalBrandingScore from './pages/PersonalBrandingScore';
+import JobMatchScore from './pages/JobMatchScore';
+
+// Pages — Phase 3: AI Tools
+import PlacementPredictor from './pages/PlacementPredictor';
+import SkillGapAnalysis from './pages/SkillGapAnalysis';
+import SalaryPredictor from './pages/SalaryPredictor';
+import VideoInterviewAnalyzer from './pages/VideoInterviewAnalyzer';
+import GDSimulator from './pages/GDSimulator';
+
+// Pages — Phase 3: Community & Social (from subagent)
+import InterviewExperienceDB from './pages/InterviewExperienceDB';
+import MentorshipMarketplace from './pages/MentorshipMarketplace';
+import ReferralNetwork from './pages/ReferralNetwork';
+import CampusLeaderboard from './pages/CampusLeaderboard';
+
 const App = () => {
   return (
     <BrowserRouter>
       <AuthProvider>
-        {/* Toast Notifications */}
         <Toaster
           position="top-right"
           gutter={8}
@@ -84,7 +102,7 @@ const App = () => {
             <Route path="profile" element={<ProfilePage />} />
             <Route path="settings" element={<SettingsPage />} />
 
-            {/* New Features */}
+            {/* Phase 2 Features */}
             <Route path="resume-builder" element={<ResumeBuilder />} />
             <Route path="placement" element={<PlacementTracker />} />
             <Route path="companies" element={<CompanyHub />} />
@@ -95,6 +113,25 @@ const App = () => {
             <Route path="coding" element={<CodingPractice />} />
             <Route path="community" element={<Community />} />
             <Route path="jobs" element={<JobPortal />} />
+
+            {/* Branding & Career Intelligence */}
+            <Route path="portfolio-review" element={<PortfolioReview />} />
+            <Route path="linkedin-optimizer" element={<LinkedInOptimizer />} />
+            <Route path="branding-score" element={<PersonalBrandingScore />} />
+            <Route path="job-match" element={<JobMatchScore />} />
+
+            {/* Phase 3: AI Tools */}
+            <Route path="placement-predictor" element={<PlacementPredictor />} />
+            <Route path="skill-gap" element={<SkillGapAnalysis />} />
+            <Route path="salary-predictor" element={<SalaryPredictor />} />
+            <Route path="video-interview" element={<VideoInterviewAnalyzer />} />
+            <Route path="gd-simulator" element={<GDSimulator />} />
+
+            {/* Phase 3: Community & Social */}
+            <Route path="interview-experiences" element={<InterviewExperienceDB />} />
+            <Route path="mentorship" element={<MentorshipMarketplace />} />
+            <Route path="referrals" element={<ReferralNetwork />} />
+            <Route path="leaderboard" element={<CampusLeaderboard />} />
           </Route>
 
           {/* Admin Routes */}
