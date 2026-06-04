@@ -33,20 +33,23 @@ import CodingPractice from './pages/CodingPractice';
 import Community from './pages/Community';
 import JobPortal from './pages/JobPortal';
 
-// Pages — Branding & Career Intelligence
-import PortfolioReview from './pages/PortfolioReview';
-import LinkedInOptimizer from './pages/LinkedInOptimizer';
-import PersonalBrandingScore from './pages/PersonalBrandingScore';
-import JobMatchScore from './pages/JobMatchScore';
-
-// Pages — Phase 3: AI Tools
+// Pages — Phase 3: AI Predictors & Tools
 import PlacementPredictor from './pages/PlacementPredictor';
 import SkillGapAnalysis from './pages/SkillGapAnalysis';
 import SalaryPredictor from './pages/SalaryPredictor';
 import VideoInterviewAnalyzer from './pages/VideoInterviewAnalyzer';
 import GDSimulator from './pages/GDSimulator';
+import InterviewSimulation from './pages/InterviewSimulation';
+import HRAvatarInterview from './pages/HRAvatarInterview';
+import JobSimulation from './pages/JobSimulation';
 
-// Pages — Phase 3: Community & Social (from subagent)
+// Pages — Phase 3: Branding & Intelligence
+import PortfolioReview from './pages/PortfolioReview';
+import LinkedInOptimizer from './pages/LinkedInOptimizer';
+import PersonalBrandingScore from './pages/PersonalBrandingScore';
+import JobMatchScore from './pages/JobMatchScore';
+
+// Pages — Phase 3: Community & Social
 import InterviewExperienceDB from './pages/InterviewExperienceDB';
 import MentorshipMarketplace from './pages/MentorshipMarketplace';
 import ReferralNetwork from './pages/ReferralNetwork';
@@ -114,18 +117,21 @@ const App = () => {
             <Route path="community" element={<Community />} />
             <Route path="jobs" element={<JobPortal />} />
 
-            {/* Branding & Career Intelligence */}
-            <Route path="portfolio-review" element={<PortfolioReview />} />
-            <Route path="linkedin-optimizer" element={<LinkedInOptimizer />} />
-            <Route path="branding-score" element={<PersonalBrandingScore />} />
-            <Route path="job-match" element={<JobMatchScore />} />
-
-            {/* Phase 3: AI Tools */}
+            {/* Phase 3: AI Predictors */}
             <Route path="placement-predictor" element={<PlacementPredictor />} />
             <Route path="skill-gap" element={<SkillGapAnalysis />} />
             <Route path="salary-predictor" element={<SalaryPredictor />} />
             <Route path="video-interview" element={<VideoInterviewAnalyzer />} />
             <Route path="gd-simulator" element={<GDSimulator />} />
+            <Route path="interview-sim" element={<InterviewSimulation />} />
+            <Route path="hr-avatar" element={<HRAvatarInterview />} />
+            <Route path="job-simulation" element={<JobSimulation />} />
+
+            {/* Phase 3: Branding & Intelligence */}
+            <Route path="portfolio-review" element={<PortfolioReview />} />
+            <Route path="linkedin-optimizer" element={<LinkedInOptimizer />} />
+            <Route path="branding-score" element={<PersonalBrandingScore />} />
+            <Route path="job-match" element={<JobMatchScore />} />
 
             {/* Phase 3: Community & Social */}
             <Route path="interview-experiences" element={<InterviewExperienceDB />} />
