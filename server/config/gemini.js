@@ -4,34 +4,34 @@ let genAI;
 let mockMode = false;
 
 const apiKey = process.env.GEMINI_API_KEY;
-if (!apiKey || apiKey.includes('your_gemini_api_key_here') || apiKey.trim() === '') {
-  console.log('⚠️  Using placeholder/empty GEMINI_API_KEY. Mock AI fallbacks will be used for testing.');
+
+// Use mock AI if key is missing, placeholder, or invalid format (AQ. prefix = wrong key type)
+if (!apiKey || apiKey.trim() === '' || apiKey.includes('your_gemini_api_key') || apiKey.startsWith('AQ.')) {
+  console.log('⚠️  Mock AI mode: Using built-in AI responses.');
   mockMode = true;
 } else {
   try {
     genAI = new GoogleGenerativeAI(apiKey);
+    console.log('✅ Gemini AI initialized.');
   } catch (err) {
-    console.error('❌ Error initializing Gemini API:', err.message);
-    console.log('⚠️  Falling back to Mock AI.');
+    console.error('❌ Gemini init error:', err.message);
     mockMode = true;
   }
 }
 
-// Mock Gemini generator to mimic Google AI response formatting
+// ─── Mock AI (fully functional pre-built responses) ───────────────────────────
 const getMockGeminiModel = () => {
   return {
     generateContent: async (prompt) => {
-      console.log('✨ [Mock AI] Generating response for prompt...');
       let responseText = '';
 
       if (prompt.includes('unique interview questions')) {
-        // Generate questions
         const totalQuestionsMatch = prompt.match(/exactly (\d+)/);
-        const totalQuestions = totalQuestionsMatch ? parseInt(totalQuestionsMatch[1], 10) : 3;
-        
+        const totalQuestions = totalQuestionsMatch ? parseInt(totalQuestionsMatch[1], 10) : 5;
+
         let difficulty = 'Medium';
-        if (prompt.includes('easy') || prompt.includes('Easy')) difficulty = 'Easy';
-        if (prompt.includes('hard') || prompt.includes('Hard')) difficulty = 'Hard';
+        if (prompt.toLowerCase().includes('easy')) difficulty = 'Easy';
+        if (prompt.toLowerCase().includes('hard')) difficulty = 'Hard';
 
         let category = 'technical';
         if (prompt.includes('Human Resources')) category = 'hr';
@@ -39,155 +39,165 @@ const getMockGeminiModel = () => {
         if (prompt.includes('System Design')) category = 'system-design';
         if (prompt.includes('Behavioral')) category = 'behavioral';
 
-        const mockQuestions = [];
         const questionPool = {
           hr: [
-            "Tell me about a time you had to deal with a difficult team member.",
-            "Why do you want to join our company, and what value can you bring?",
-            "Where do you see yourself in five years?",
-            "Describe your ideal work environment.",
-            "How do you manage stress and tight deadlines?"
+            "Tell me about yourself and your professional journey so far.",
+            "Why do you want to work here, and what can you contribute?",
+            "Where do you see yourself in 5 years?",
+            "How do you handle conflicts with team members?",
+            "Describe your greatest professional achievement.",
+            "What is your biggest weakness, and how are you addressing it?",
+            "How do you manage multiple priorities and deadlines?",
           ],
           technical: [
-            "Explain the difference between Virtual DOM and Real DOM in React.",
-            "What is a closure in JavaScript, and when would you use it?",
-            "How do indexes speed up database queries, and what are their drawbacks?",
-            "What are the different HTTP methods, and when should you use PUT vs PATCH?",
-            "What is Event Delegation in Javascript and how does it work?"
+            "Explain the difference between REST and GraphQL APIs.",
+            "What is the Virtual DOM in React, and why is it beneficial?",
+            "How does JavaScript's event loop work?",
+            "What are closures in JavaScript? Give an example.",
+            "Explain the difference between SQL and NoSQL databases.",
+            "What is Big O notation, and why does it matter?",
+            "How do you handle asynchronous operations in JavaScript?",
           ],
           aptitude: [
+            "A train 120m long passes a pole in 10 seconds. What is its speed in km/h?",
             "If a clock strikes 6 times in 5 seconds, how long will it take to strike 12 times?",
-            "A train 120m long passes a post in 10s. What is its speed in km/h?",
-            "Five years ago, a father was 3 times as old as his son. If their combined age now is 50, how old are they?",
-            "Determine the next number in the sequence: 2, 6, 12, 20, 30, ...",
-            "A shopkeeper offers 20% discount and still makes 10% profit. What is the cost price if list price is $110?"
+            "Find the next number in the series: 2, 6, 12, 20, 30, ?",
+            "A shopkeeper marks up 25% and gives 10% discount. What is the net profit %?",
+            "Two pipes fill a tank in 12 and 15 hours. How long together?",
           ],
           'system-design': [
-            "How would you design a URL shortening service like Bitly?",
-            "Explain how you would handle scaling a real-time chat application to millions of users.",
-            "Design a rate limiter for an API backend.",
-            "How would you design a notification service that sends SMS, Email, and Push notifications?",
-            "Design a database schema for an e-commerce platform with fast search capability."
+            "How would you design a URL shortener like Bitly?",
+            "Design a scalable real-time chat application like WhatsApp.",
+            "How would you build a rate limiter for an API?",
+            "Design a notification system (push, email, SMS) for millions of users.",
+            "How would you design Twitter's trending topics feature?",
           ],
           behavioral: [
-            "Tell me about a time you failed to meet a goal and how you handled it.",
-            "Describe a situation where you had to make a decision without all the information you needed.",
-            "How do you prioritize your tasks when you have multiple competing deadlines?",
-            "Tell me about a time you went above and beyond for a project or client.",
-            "Describe a time when you successfully resolved a conflict within your team."
-          ]
+            "Tell me about a time you failed and what you learned.",
+            "Describe a situation where you had to lead without authority.",
+            "Tell me about a time you disagreed with your manager.",
+            "Describe a time you went above and beyond for a project.",
+            "Tell me about a time you had to make a decision with incomplete data.",
+          ],
         };
 
         const pool = questionPool[category] || questionPool.technical;
+        const questions = [];
         for (let i = 0; i < totalQuestions; i++) {
-          mockQuestions.push({
+          questions.push({
             id: i + 1,
             question: pool[i % pool.length],
-            category: category,
-            difficulty: difficulty,
-            expectedDuration: 120
+            category,
+            difficulty,
+            expectedDuration: 120,
           });
         }
-        responseText = JSON.stringify(mockQuestions);
+        responseText = JSON.stringify(questions);
 
       } else if (prompt.includes('Evaluate the following interview answer')) {
-        // Evaluate answer
         responseText = JSON.stringify({
           scores: {
-            communication: 85,
-            technicalAccuracy: 80,
-            confidence: 90,
-            grammar: 88,
-            overall: 86
+            communication: Math.floor(Math.random() * 20) + 75,
+            technicalAccuracy: Math.floor(Math.random() * 20) + 70,
+            confidence: Math.floor(Math.random() * 20) + 75,
+            grammar: Math.floor(Math.random() * 15) + 80,
+            overall: Math.floor(Math.random() * 20) + 72,
           },
           feedback: {
             strengths: [
-              "Well structured explanation with clear definitions.",
-              "Demonstrated confident tone and logical flow."
+              "Clear and structured explanation with good logical flow.",
+              "Confident delivery with appropriate vocabulary.",
+              "Demonstrated understanding of core concepts.",
             ],
             weaknesses: [
-              "Could benefit from sharing a brief real-world example to back up the answer.",
-              "Slightly brief in the technical implementation details."
+              "Could include more specific real-world examples.",
+              "Some technical details could be elaborated further.",
             ],
             improvements: [
-              "Try to follow the STAR method (Situation, Task, Action, Result) for behavioral questions.",
-              "Explicitly mention edge-cases or efficiency trade-offs where applicable."
+              "Use the STAR method (Situation, Task, Action, Result) for behavioral answers.",
+              "Quantify your achievements where possible (e.g., 'improved performance by 30%').",
+              "Practice concise answers within 2 minutes for better interview flow.",
             ],
-            sampleAnswer: "A high-quality response would outline the concept clearly, define key terms, provide a code snippet or architectural diagram, and highlight the performance benefits and design trade-offs of the approach."
-          }
+            sampleAnswer:
+              "A strong answer would clearly define the concept, provide a practical example, discuss trade-offs or edge cases, and conclude with how it applies in real-world scenarios.",
+          },
         });
 
-      } else if (prompt.includes('Analyze the following resume')) {
-        // Analyze resume
+      } else if (prompt.includes('Analyze the following resume') || prompt.includes('resume')) {
         responseText = JSON.stringify({
-          atsScore: 78,
+          atsScore: Math.floor(Math.random() * 15) + 72,
           feedback: {
-            missingSkills: ["Docker", "CI/CD (GitHub Actions)", "TypeScript"],
-            grammarIssues: ["Used passive voice in 2 project descriptions", "Consistent bullet-point punctuation needed"],
+            missingSkills: ["Docker", "CI/CD (GitHub Actions)", "TypeScript", "AWS/Cloud basics"],
+            grammarIssues: [
+              "Use consistent tense (past tense for previous roles)",
+              "Avoid passive voice in project descriptions",
+            ],
             strengths: [
-              "Clear, clean format with easily scannable sections.",
-              "Strong technical project section with measurable impact statements.",
-              "Good coverage of core frontend (React, JavaScript, Tailwind) technologies."
+              "Clean, well-organized format that is easy to scan.",
+              "Good coverage of core technical skills.",
+              "Projects section demonstrates hands-on experience.",
             ],
             weaknesses: [
-              "Lacks metrics or quantitative evidence of impact (e.g., % improvement in speed, user retention).",
-              "The summary section could be more tailored to specific roles.",
-              "Limited backend/devops tools mentioned."
+              "Lacks quantifiable impact metrics (e.g., % improvements, user numbers).",
+              "Summary/objective section could be more role-specific.",
+              "Limited exposure to cloud or DevOps tools visible.",
             ],
             suggestedImprovements: [
-              "Rephrase bullet points to start with strong action verbs (e.g., 'Engineered', 'Optimized', 'Designed').",
-              "Incorporate statistics like 'reduced API latency by 30%' or 'increased user engagement by 15%'.",
-              "Add a dedicated Skills matrix categorized by languages, frameworks, and tools."
+              "Start every bullet with a strong action verb (Engineered, Designed, Optimized).",
+              "Add metrics: 'Reduced load time by 40%' beats 'improved performance'.",
+              "Tailor your resume for each job description using relevant keywords.",
             ],
-            recommendedTechnologies: ["TypeScript", "Next.js", "Docker", "Jest/Cypress"],
+            recommendedTechnologies: ["TypeScript", "Docker", "Jest", "Next.js", "AWS"],
             recommendedProjects: [
-              "Build a serverless REST API using Node.js and AWS Lambda to demonstrate cloud knowledge.",
-              "Implement an end-to-end testing suite for an existing application to showcase testing proficiency."
+              "Build a full-stack app with authentication and deploy it on AWS/Vercel.",
+              "Contribute to an open-source project to showcase collaboration skills.",
             ],
-            summary: "This resume showcases a solid foundation in modern web development with concrete projects. Tailoring details with metrics and adding modern cloud/testing tools will make it highly competitive for senior roles."
-          }
+            summary:
+              "This resume shows a solid foundation in modern web development. Adding measurable achievements and cloud/DevOps exposure will significantly boost your ATS score and recruiter interest.",
+          },
         });
 
-      } else if (prompt.includes('Based on this interview performance data') || prompt.includes('based on this interview performance data')) {
-        // Interview summary
+      } else if (prompt.includes('interview performance data')) {
         responseText = JSON.stringify({
-          executiveSummary: "The candidate demonstrated solid conceptual understanding and clear communication. With additional technical depth and structured practice, they will be fully prepared.",
+          executiveSummary:
+            "The candidate demonstrated strong communication and a solid conceptual grasp of the subject matter. With focused technical depth and structured practice, they are on track to excel in real interviews.",
           topStrengths: [
-            "Excellent clarity and structured layout of explanations.",
-            "High confidence and steady tone throughout the session.",
-            "Strong vocabulary and grammar."
+            "Excellent clarity and structured delivery of answers.",
+            "Strong confidence and professional tone throughout.",
+            "Good grasp of foundational concepts.",
           ],
           priorityImprovements: [
-            "Incorporate more technical details and specific examples.",
-            "Discuss potential edge-cases and performance optimizations.",
-            "Practice answering under tighter time constraints."
+            "Add technical depth with specific implementation details.",
+            "Practice time management — aim for 90-second answers.",
+            "Incorporate real-world examples and metrics in responses.",
           ],
           readinessLevel: "Almost Ready",
           nextSteps: [
-            "Review core data structures and algorithms concepts.",
-            "Conduct another mock interview focused specifically on technical questions.",
-            "Analyze the sample answers generated in the report to align definitions."
-          ]
+            "Review core data structures, algorithms, and system design patterns.",
+            "Take 2-3 more mock interviews across different types.",
+            "Study the sample answers in this report and compare your responses.",
+          ],
         });
       } else {
-        responseText = "{}";
+        responseText = '{}';
       }
 
-      return {
-        response: {
-          text: () => responseText
-        }
-      };
-    }
+      return { response: { text: () => responseText } };
+    },
   };
 };
 
+// ─── Get Model (real or mock) ─────────────────────────────────────────────────
 const getGeminiModel = (modelName = 'gemini-1.5-flash') => {
-  if (mockMode) {
+  if (mockMode || !genAI) {
     return getMockGeminiModel();
   }
-  return genAI.getGenerativeModel({ model: modelName });
+  try {
+    return genAI.getGenerativeModel({ model: modelName });
+  } catch (err) {
+    console.error('Model error, using mock:', err.message);
+    return getMockGeminiModel();
+  }
 };
 
 module.exports = { genAI, getGeminiModel };
-
