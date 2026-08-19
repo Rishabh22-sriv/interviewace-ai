@@ -1,23 +1,46 @@
 import { useState } from 'react';
-import { useNavigate, useSearchParams } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 import { motion, AnimatePresence } from 'framer-motion';
 import { interviewService } from '../services';
 import toast from 'react-hot-toast';
 import {
   Brain, Mic, MessageSquare, Code, Target, Users,
   ChevronRight, Play, Settings, Zap, Clock, BarChart3,
-  CheckCircle, Send, StopCircle, Volume2, VolumeX
+  CheckCircle, Send, AlertTriangle, RefreshCw, Info
 } from 'lucide-react';
-import LoadingSpinner from '../components/LoadingSpinner';
 
-// ---- Step 1: Interview Setup ----
+// ─────────────────────────────────────────────
+// TOPIC SUGGESTIONS per interview type
+// ─────────────────────────────────────────────
+
+const TOPIC_SUGGESTIONS = {
+  technical: [
+    'HTML', 'CSS', 'JavaScript', 'React', 'Node.js',
+    'Python', 'Java', 'C++', 'SQL', 'MongoDB',
+    'DSA', 'System Design', 'DBMS', 'OS', 'Computer Networks',
+    'TypeScript', 'Git', 'Docker', 'REST APIs', 'GraphQL',
+  ],
+  aptitude: ['Quantitative', 'Logical Reasoning', 'Verbal', 'Data Interpretation', 'Puzzles'],
+  'system-design': [
+    'Design a URL Shortener', 'Design WhatsApp', 'Design Netflix',
+    'Design Twitter', 'Design a Payment System', 'Design a Cache System',
+    'Design an API Rate Limiter', 'Design a Notification System',
+  ],
+  hr: ['Leadership', 'Teamwork', 'Conflict Resolution', 'Career Goals', 'Work Ethic'],
+  behavioral: ['STAR Method', 'Problem Solving', 'Leadership', 'Failure Stories', 'Achievements'],
+};
+
 const interviewTypes = [
-  { id: 'hr', label: 'HR Interview', description: 'Soft skills, culture fit, background', icon: Users, color: '#7C3AED', gradient: 'rgba(124,58,237,0.12)' },
-  { id: 'technical', label: 'Technical', description: 'Coding, algorithms, data structures', icon: Code, color: '#06B6D4', gradient: 'rgba(6,182,212,0.12)' },
-  { id: 'aptitude', label: 'Aptitude', description: 'Logical reasoning, problem solving', icon: Brain, color: '#10B981', gradient: 'rgba(16,185,129,0.12)' },
-  { id: 'system-design', label: 'System Design', description: 'Architecture, scalability, design', icon: Settings, color: '#F59E0B', gradient: 'rgba(245,158,11,0.12)' },
-  { id: 'behavioral', label: 'Behavioral', description: 'STAR method, situational questions', icon: MessageSquare, color: '#EC4899', gradient: 'rgba(236,72,153,0.12)' },
+  { id: 'technical', label: 'Technical', description: 'Coding, concepts, domain knowledge', icon: Code, color: '#06B6D4', gradient: 'rgba(6,182,212,0.12)', requiresTopic: true },
+  { id: 'hr', label: 'HR Interview', description: 'Culture fit, soft skills, background', icon: Users, color: '#7C3AED', gradient: 'rgba(124,58,237,0.12)', requiresTopic: false },
+  { id: 'behavioral', label: 'Behavioral', description: 'STAR method, situational questions', icon: MessageSquare, color: '#EC4899', gradient: 'rgba(236,72,153,0.12)', requiresTopic: false },
+  { id: 'aptitude', label: 'Aptitude', description: 'Logical reasoning, problem solving', icon: Brain, color: '#10B981', gradient: 'rgba(16,185,129,0.12)', requiresTopic: false },
+  { id: 'system-design', label: 'System Design', description: 'Architecture, scalability, design', icon: Settings, color: '#F59E0B', gradient: 'rgba(245,158,11,0.12)', requiresTopic: false },
 ];
+
+// ─────────────────────────────────────────────
+// Step 1: Setup
+// ─────────────────────────────────────────────
 
 const SetupStep = ({ onStart }) => {
   const [type, setType] = useState('');
@@ -27,14 +50,29 @@ const SetupStep = ({ onStart }) => {
   const [inputMethod, setInputMethod] = useState('text');
   const [loading, setLoading] = useState(false);
 
+  const selectedType = interviewTypes.find(t => t.id === type);
+  const suggestions = TOPIC_SUGGESTIONS[type] || [];
+
   const handleStart = async () => {
     if (!type) return toast.error('Please select an interview type');
+    
+    // Enforce topic for technical interviews
+    if (type === 'technical' && !topic.trim()) {
+      return toast.error('Please select or enter a topic for Technical interviews (e.g., "HTML", "Python")');
+    }
+    
     setLoading(true);
     try {
-      const res = await interviewService.start({ type, difficulty, totalQuestions: questions, topic });
+      const res = await interviewService.start({ 
+        type, 
+        difficulty, 
+        totalQuestions: questions, 
+        topic: topic.trim(),
+      });
       onStart(res.data.interview, inputMethod);
     } catch (err) {
-      toast.error(err.response?.data?.message || 'Failed to generate interview. Check your API key.');
+      const msg = err.response?.data?.message || 'Failed to generate interview. Please try again.';
+      toast.error(msg);
     } finally {
       setLoading(false);
     }
@@ -60,7 +98,7 @@ const SetupStep = ({ onStart }) => {
               <button
                 key={t.id}
                 id={`type-${t.id}`}
-                onClick={() => setType(t.id)}
+                onClick={() => { setType(t.id); setTopic(''); }}
                 style={{
                   padding: '16px 12px',
                   borderRadius: 12,
@@ -78,10 +116,82 @@ const SetupStep = ({ onStart }) => {
                 <t.icon size={22} style={{ color: type === t.id ? t.color : '#475569' }} />
                 <p style={{ color: type === t.id ? '#E2E8F0' : '#94A3B8', fontSize: 13, fontWeight: 600, margin: 0 }}>{t.label}</p>
                 <p style={{ color: '#64748B', fontSize: 11, margin: 0, lineHeight: 1.4 }}>{t.description}</p>
+                {t.requiresTopic && (
+                  <span style={{ fontSize: 10, color: t.color, fontWeight: 700, background: `${t.color}15`, padding: '2px 7px', borderRadius: 10, border: `1px solid ${t.color}30` }}>Topic Required</span>
+                )}
               </button>
             ))}
           </div>
         </div>
+
+        {/* Topic Selection — shown when type is selected */}
+        <AnimatePresence>
+          {type && (
+            <motion.div
+              initial={{ opacity: 0, height: 0 }}
+              animate={{ opacity: 1, height: 'auto' }}
+              exit={{ opacity: 0, height: 0 }}
+              className="glass-card-static"
+              style={{ padding: 24, marginBottom: 20, overflow: 'hidden' }}
+            >
+              <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 8, display: 'flex', alignItems: 'center', gap: 8 }}>
+                🎯 {selectedType?.requiresTopic ? (
+                  <><span style={{ color: '#EF4444' }}>*</span> Select Topic <span style={{ color: '#64748B', fontSize: 12, fontWeight: 400 }}>(required for Technical)</span></>
+                ) : (
+                  <>Select Topic <span style={{ color: '#64748B', fontSize: 12, fontWeight: 400 }}>(optional — adds focus)</span></>
+                )}
+              </h3>
+              
+              {/* Quick-select chips */}
+              {suggestions.length > 0 && (
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 8, marginBottom: 12 }}>
+                  {suggestions.map(s => (
+                    <button
+                      key={s}
+                      onClick={() => setTopic(s)}
+                      style={{
+                        padding: '6px 14px',
+                        borderRadius: 20,
+                        border: `1px solid ${topic === s ? '#7C3AED' : 'rgba(99,102,241,0.15)'}`,
+                        background: topic === s ? 'rgba(124,58,237,0.15)' : 'rgba(15,23,42,0.4)',
+                        color: topic === s ? '#C4B5FD' : '#64748B',
+                        cursor: 'pointer',
+                        fontSize: 13,
+                        fontWeight: topic === s ? 600 : 400,
+                        transition: 'all 0.15s',
+                        fontFamily: 'Inter, sans-serif',
+                      }}
+                    >
+                      {topic === s && '✓ '}{s}
+                    </button>
+                  ))}
+                </div>
+              )}
+              
+              <input
+                className="input-field"
+                placeholder={type === 'technical' ? 'Or type a custom topic (e.g., "React Hooks", "Binary Trees")' : 'Optional: type a specific focus area'}
+                value={topic}
+                onChange={(e) => setTopic(e.target.value)}
+                style={{ fontSize: 14 }}
+              />
+              
+              {type === 'technical' && topic && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8 }}>
+                  <CheckCircle size={14} style={{ color: '#10B981' }} />
+                  <span style={{ color: '#10B981', fontSize: 12, fontWeight: 600 }}>AI will generate strictly {topic}-specific questions</span>
+                </div>
+              )}
+              
+              {type === 'technical' && !topic && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8 }}>
+                  <AlertTriangle size={14} style={{ color: '#F59E0B' }} />
+                  <span style={{ color: '#F59E0B', fontSize: 12 }}>Select a topic above to ensure accurate, focused questions</span>
+                </div>
+              )}
+            </motion.div>
+          )}
+        </AnimatePresence>
 
         {/* Options Row */}
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: 20, marginBottom: 20 }}>
@@ -91,26 +201,30 @@ const SetupStep = ({ onStart }) => {
               <Zap size={16} style={{ color: '#F59E0B' }} /> Difficulty
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {['easy', 'medium', 'hard'].map((d) => (
+              {[
+                { id: 'easy', label: 'Easy', emoji: '🟢', desc: 'Fundamentals & basics' },
+                { id: 'medium', label: 'Medium', emoji: '🟡', desc: 'Practical understanding' },
+                { id: 'hard', label: 'Hard', emoji: '🔴', desc: 'Advanced & edge cases' },
+              ].map((d) => (
                 <button
-                  key={d}
-                  onClick={() => setDifficulty(d)}
+                  key={d.id}
+                  onClick={() => setDifficulty(d.id)}
                   style={{
                     padding: '10px 14px',
                     borderRadius: 8,
-                    border: `1px solid ${difficulty === d ? '#6366F1' : 'rgba(99,102,241,0.12)'}`,
-                    background: difficulty === d ? 'rgba(99,102,241,0.12)' : 'transparent',
-                    color: difficulty === d ? '#A5B4FC' : '#64748B',
+                    border: `1px solid ${difficulty === d.id ? '#6366F1' : 'rgba(99,102,241,0.12)'}`,
+                    background: difficulty === d.id ? 'rgba(99,102,241,0.12)' : 'transparent',
+                    color: difficulty === d.id ? '#A5B4FC' : '#64748B',
                     cursor: 'pointer',
-                    textTransform: 'capitalize',
                     fontWeight: 600,
-                    fontSize: 14,
+                    fontSize: 13,
                     textAlign: 'left',
                     transition: 'all 0.2s',
                     fontFamily: 'Inter, sans-serif',
                   }}
                 >
-                  {d === 'easy' ? '🟢' : d === 'medium' ? '🟡' : '🔴'} {d.charAt(0).toUpperCase() + d.slice(1)}
+                  {d.emoji} {d.label}
+                  <span style={{ display: 'block', fontSize: 11, fontWeight: 400, color: '#475569', marginTop: 2 }}>{d.desc}</span>
                 </button>
               ))}
             </div>
@@ -173,25 +287,12 @@ const SetupStep = ({ onStart }) => {
           </div>
         </div>
 
-        {/* Topic */}
-        <div className="glass-card-static" style={{ padding: 24, marginBottom: 24 }}>
-          <h3 style={{ fontSize: 15, fontWeight: 700, marginBottom: 12 }}>
-            Specific Topic <span style={{ color: '#475569', fontWeight: 400, fontSize: 13 }}>(optional)</span>
-          </h3>
-          <input
-            className="input-field"
-            placeholder="e.g., React.js, Machine Learning, Java, Leadership..."
-            value={topic}
-            onChange={(e) => setTopic(e.target.value)}
-          />
-        </div>
-
         {/* Start Button */}
         <button
           id="start-interview-btn"
           className="btn-primary"
           onClick={handleStart}
-          disabled={loading || !type}
+          disabled={loading || !type || (type === 'technical' && !topic.trim())}
           style={{ width: '100%', justifyContent: 'center', padding: '16px', fontSize: 17 }}
         >
           {loading ? (
@@ -203,59 +304,62 @@ const SetupStep = ({ onStart }) => {
             <><Play size={20} /> Start Interview Session</>
           )}
         </button>
+        
+        {type === 'technical' && !topic.trim() && (
+          <p style={{ textAlign: 'center', color: '#F59E0B', fontSize: 13, marginTop: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5 }}>
+            <AlertTriangle size={14} /> Please select a topic to enable the start button
+          </p>
+        )}
       </motion.div>
     </div>
   );
 };
 
-// ---- Voice Recorder Hook ----
+// ─────────────────────────────────────────────
+// Voice Recorder Hook
+// ─────────────────────────────────────────────
+
 const useVoiceRecorder = (onTranscript) => {
   const [recording, setRecording] = useState(false);
   const recognitionRef = useState(null);
 
   const startRecording = () => {
     if (!('webkitSpeechRecognition' in window) && !('SpeechRecognition' in window)) {
-      toast.error('Voice recognition not supported in this browser. Please use Chrome.');
+      toast.error('Voice recognition not supported. Please use Chrome.');
       return;
     }
-
     const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
     const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.lang = 'en-US';
-
     let finalTranscript = '';
     recognition.onresult = (event) => {
       let interim = '';
       for (let i = event.resultIndex; i < event.results.length; i++) {
         const transcript = event.results[i][0].transcript;
-        if (event.results[i].isFinal) {
-          finalTranscript += transcript + ' ';
-        } else {
-          interim += transcript;
-        }
+        if (event.results[i].isFinal) finalTranscript += transcript + ' ';
+        else interim += transcript;
       }
       onTranscript(finalTranscript + interim);
     };
-
     recognition.start();
     recognitionRef[1](recognition);
     setRecording(true);
   };
 
   const stopRecording = () => {
-    if (recognitionRef[0]) {
-      recognitionRef[0].stop();
-      recognitionRef[1](null);
-    }
+    if (recognitionRef[0]) { recognitionRef[0].stop(); recognitionRef[1](null); }
     setRecording(false);
   };
 
   return { recording, startRecording, stopRecording };
 };
 
-// ---- Step 2: Interview Session ----
+// ─────────────────────────────────────────────
+// Step 2: Interview Session
+// ─────────────────────────────────────────────
+
 const InterviewSession = ({ interview, inputMethod, onComplete }) => {
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answer, setAnswer] = useState('');
@@ -264,16 +368,20 @@ const InterviewSession = ({ interview, inputMethod, onComplete }) => {
   const [answers, setAnswers] = useState([]);
   const [startTime] = useState(Date.now());
   const [completing, setCompleting] = useState(false);
+  const [submitError, setSubmitError] = useState(null);
 
   const { recording, startRecording, stopRecording } = useVoiceRecorder((text) => setAnswer(text));
 
   const currentQuestion = interview.questions[currentIndex];
   const isLastQuestion = currentIndex === interview.questions.length - 1;
-  const progress = ((currentIndex) / interview.questions.length) * 100;
+  const progress = (currentIndex / interview.questions.length) * 100;
 
   const handleSubmitAnswer = async () => {
-    if (!answer.trim()) return toast.error('Please provide an answer');
+    if (!answer.trim()) return toast.error('Please provide an answer before submitting');
+    if (answer.trim().length < 10) return toast.error('Please provide a more detailed answer (at least 10 characters)');
+    
     setSubmitting(true);
+    setSubmitError(null);
     try {
       const res = await interviewService.submitAnswer({
         interviewId: interview.id,
@@ -284,7 +392,9 @@ const InterviewSession = ({ interview, inputMethod, onComplete }) => {
       setEvaluation(res.data.evaluation);
       setAnswers([...answers, { question: currentQuestion.question, answer, evaluation: res.data.evaluation }]);
     } catch (err) {
-      toast.error('Failed to evaluate answer. Please try again.');
+      const msg = err.response?.data?.message || 'Failed to evaluate answer. Please try again.';
+      setSubmitError(msg);
+      toast.error(msg);
     } finally {
       setSubmitting(false);
     }
@@ -307,22 +417,38 @@ const InterviewSession = ({ interview, inputMethod, onComplete }) => {
       setCurrentIndex(currentIndex + 1);
       setAnswer('');
       setEvaluation(null);
+      setSubmitError(null);
     }
   };
 
   const getScoreColor = (s) => s >= 80 ? '#10B981' : s >= 60 ? '#6366F1' : s >= 40 ? '#F59E0B' : '#EF4444';
+  const getScoreLabel = (s) => s >= 80 ? 'Excellent' : s >= 60 ? 'Good' : s >= 40 ? 'Fair' : 'Needs Work';
+
+  // Score display mapping (rename for honest display)
+  const scoreItems = [
+    { label: 'Communication', key: 'communication', desc: 'Clarity and structure of your answer' },
+    { label: 'Technical Accuracy', key: 'technicalAccuracy', desc: `Correctness for ${interview.topic}` },
+    { label: 'Relevance', key: 'relevance', desc: 'How directly you answered the question' },
+    { label: 'Completeness', key: 'completeness', desc: 'Key concepts covered' },
+  ];
 
   return (
     <div style={{ maxWidth: 800, margin: '0 auto' }}>
-      {/* Progress Bar */}
-      <div style={{ marginBottom: 24 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+      {/* Header */}
+      <div style={{ marginBottom: 20, display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+        <div>
           <span style={{ color: '#94A3B8', fontSize: 14 }}>Question {currentIndex + 1} of {interview.questions.length}</span>
-          <span style={{ color: '#A5B4FC', fontSize: 14, fontWeight: 600 }}>{interview.type.replace(/-/g, ' ').toUpperCase()} • {interview.difficulty.toUpperCase()}</span>
+          <span style={{ color: '#64748B', fontSize: 12, marginLeft: 10 }}>
+            {interview.topic && `• ${interview.topic}`}
+          </span>
         </div>
-        <div className="progress-bar">
-          <motion.div className="progress-fill" initial={{ width: 0 }} animate={{ width: `${progress}%` }} />
-        </div>
+        <span style={{ color: '#A5B4FC', fontSize: 13, fontWeight: 600 }}>
+          {interview.type.replace(/-/g, ' ').toUpperCase()} • {interview.difficulty.toUpperCase()}
+        </span>
+      </div>
+      
+      <div className="progress-bar" style={{ marginBottom: 24 }}>
+        <motion.div className="progress-fill" initial={{ width: 0 }} animate={{ width: `${progress}%` }} />
       </div>
 
       {/* Question Card */}
@@ -337,11 +463,22 @@ const InterviewSession = ({ interview, inputMethod, onComplete }) => {
           <div style={{ width: 36, height: 36, borderRadius: 10, background: 'linear-gradient(135deg, #7C3AED, #6366F1)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <Brain size={18} color="white" />
           </div>
-          <div>
-            <p style={{ color: '#A5B4FC', fontSize: 12, fontWeight: 600, margin: '0 0 4px' }}>AI INTERVIEWER</p>
-            <p style={{ color: '#E2E8F0', fontSize: 16, lineHeight: 1.7, margin: 0, fontWeight: 500 }}>{currentQuestion.question}</p>
+          <div style={{ flex: 1 }}>
+            <p style={{ color: '#A5B4FC', fontSize: 12, fontWeight: 600, margin: '0 0 6px' }}>
+              AI INTERVIEWER — {interview.topic ? interview.topic.toUpperCase() : interview.type.toUpperCase()}
+            </p>
+            <p style={{ color: '#E2E8F0', fontSize: 16, lineHeight: 1.7, margin: 0, fontWeight: 500 }}>
+              {currentQuestion.question}
+            </p>
           </div>
         </div>
+        
+        {currentQuestion.hint && !evaluation && (
+          <div style={{ display: 'flex', gap: 8, padding: '10px 14px', background: 'rgba(99,102,241,0.06)', borderRadius: 8, border: '1px solid rgba(99,102,241,0.12)', marginTop: 12 }}>
+            <Info size={14} style={{ color: '#818CF8', flexShrink: 0, marginTop: 1 }} />
+            <span style={{ color: '#818CF8', fontSize: 12 }}>Hint: {currentQuestion.hint}</span>
+          </div>
+        )}
       </motion.div>
 
       {/* Answer Area */}
@@ -352,20 +489,12 @@ const InterviewSession = ({ interview, inputMethod, onComplete }) => {
             {inputMethod === 'voice' && (
               <div style={{ display: 'flex', gap: 8 }}>
                 {!recording ? (
-                  <button
-                    onClick={startRecording}
-                    className="btn-primary"
-                    style={{ padding: '8px 16px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}
-                  >
+                  <button onClick={startRecording} className="btn-primary" style={{ padding: '8px 16px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}>
                     <Mic size={14} /> Start Recording
                   </button>
                 ) : (
-                  <button
-                    onClick={stopRecording}
-                    className="btn-danger"
-                    style={{ padding: '8px 16px', fontSize: 13, display: 'flex', alignItems: 'center', gap: 6 }}
-                  >
-                    <div className="recording-pulse" />
+                  <button onClick={stopRecording} style={{ padding: '8px 16px', fontSize: 13, borderRadius: 8, border: '1px solid #EF4444', background: 'rgba(239,68,68,0.1)', color: '#EF4444', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 6 }}>
+                    <motion.div animate={{ scale: [1, 1.3, 1] }} transition={{ repeat: Infinity, duration: 0.8 }} style={{ width: 8, height: 8, borderRadius: '50%', background: '#EF4444' }} />
                     Stop Recording
                   </button>
                 )}
@@ -376,10 +505,20 @@ const InterviewSession = ({ interview, inputMethod, onComplete }) => {
           <textarea
             value={answer}
             onChange={(e) => setAnswer(e.target.value)}
-            placeholder={inputMethod === 'voice' ? 'Your speech will appear here as you speak...' : 'Type your answer here. Be detailed and specific...'}
+            placeholder={inputMethod === 'voice' ? 'Your speech will appear here...' : 'Type your answer in detail. The more specific you are, the better the evaluation.'}
             className="input-field"
             style={{ minHeight: 140, resize: 'vertical', fontFamily: 'Inter, sans-serif', lineHeight: 1.7 }}
           />
+
+          {submitError && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 10, padding: '10px 14px', background: 'rgba(239,68,68,0.08)', borderRadius: 8, border: '1px solid rgba(239,68,68,0.2)' }}>
+              <AlertTriangle size={14} style={{ color: '#EF4444' }} />
+              <span style={{ color: '#FCA5A5', fontSize: 13 }}>{submitError}</span>
+              <button onClick={handleSubmitAnswer} style={{ marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 5, padding: '5px 12px', borderRadius: 7, border: '1px solid rgba(239,68,68,0.3)', background: 'rgba(239,68,68,0.1)', color: '#EF4444', cursor: 'pointer', fontSize: 12 }}>
+                <RefreshCw size={12} /> Retry
+              </button>
+            </div>
+          )}
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 14 }}>
             <span style={{ color: '#475569', fontSize: 12 }}>{answer.length} characters</span>
@@ -415,65 +554,70 @@ const InterviewSession = ({ interview, inputMethod, onComplete }) => {
             <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
               <CheckCircle size={20} style={{ color: '#10B981' }} />
               <h3 style={{ fontSize: 16, fontWeight: 700, fontFamily: 'Outfit, sans-serif', margin: 0 }}>AI Evaluation</h3>
+              <span style={{ marginLeft: 'auto', fontSize: 22, fontWeight: 900, color: getScoreColor(evaluation.scores?.overall), fontFamily: 'Outfit, sans-serif' }}>
+                {evaluation.scores?.overall || 0}/100
+              </span>
             </div>
 
             {/* Score Grid */}
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 12, marginBottom: 24 }}>
-              {[
-                { label: 'Communication', key: 'communication' },
-                { label: 'Technical Accuracy', key: 'technicalAccuracy' },
-                { label: 'Confidence', key: 'confidence' },
-                { label: 'Grammar', key: 'grammar' },
-              ].map(({ label, key }) => {
-                const score = evaluation.scores?.[key] || 0;
+              {scoreItems.map(({ label, key, desc }) => {
+                const score = evaluation.scores?.[key] ?? 0;
                 return (
                   <div key={key} style={{ background: 'rgba(15,23,42,0.5)', borderRadius: 10, padding: 14 }}>
-                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
-                      <span style={{ color: '#94A3B8', fontSize: 12 }}>{label}</span>
-                      <span style={{ color: getScoreColor(score), fontWeight: 700, fontSize: 14 }}>{score}</span>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 4 }}>
+                      <span style={{ color: '#94A3B8', fontSize: 12, fontWeight: 600 }}>{label}</span>
+                      <span style={{ color: getScoreColor(score), fontWeight: 700, fontSize: 14 }}>{score} <span style={{ fontSize: 10, color: getScoreColor(score) }}>({getScoreLabel(score)})</span></span>
                     </div>
+                    <span style={{ color: '#475569', fontSize: 11, display: 'block', marginBottom: 6 }}>{desc}</span>
                     <div className="progress-bar">
-                      <motion.div
-                        className="progress-fill"
-                        initial={{ width: 0 }}
-                        animate={{ width: `${score}%` }}
-                        style={{ background: getScoreColor(score) }}
-                        transition={{ duration: 0.8, delay: 0.1 }}
-                      />
+                      <motion.div className="progress-fill" initial={{ width: 0 }} animate={{ width: `${score}%` }} style={{ background: getScoreColor(score) }} transition={{ duration: 0.8, delay: 0.1 }} />
                     </div>
                   </div>
                 );
               })}
             </div>
 
-            {/* Strengths & Weaknesses */}
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16, marginBottom: 20 }}>
-              {evaluation.feedback?.strengths?.length > 0 && (
-                <div style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.15)', borderRadius: 10, padding: 16 }}>
-                  <p style={{ color: '#6EE7B7', fontSize: 13, fontWeight: 700, marginBottom: 8 }}>✅ Strengths</p>
-                  <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                    {evaluation.feedback.strengths.map((s, i) => (
-                      <li key={i} style={{ color: '#94A3B8', fontSize: 13, marginBottom: 4 }}>• {s}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-              {evaluation.feedback?.weaknesses?.length > 0 && (
-                <div style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.15)', borderRadius: 10, padding: 16 }}>
-                  <p style={{ color: '#FCA5A5', fontSize: 13, fontWeight: 700, marginBottom: 8 }}>⚠️ Improvements</p>
-                  <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                    {evaluation.feedback.weaknesses.map((w, i) => (
-                      <li key={i} style={{ color: '#94A3B8', fontSize: 13, marginBottom: 4 }}>• {w}</li>
-                    ))}
-                  </ul>
-                </div>
-              )}
-            </div>
+            {/* Strengths */}
+            {evaluation.feedback?.strengths?.length > 0 && (
+              <div style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.15)', borderRadius: 10, padding: 16, marginBottom: 12 }}>
+                <p style={{ color: '#6EE7B7', fontSize: 13, fontWeight: 700, marginBottom: 8 }}>✅ What you did well</p>
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                  {evaluation.feedback.strengths.map((s, i) => (
+                    <li key={i} style={{ color: '#94A3B8', fontSize: 13, marginBottom: 4 }}>• {s}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
-            {/* Sample Answer */}
+            {/* Weaknesses */}
+            {evaluation.feedback?.weaknesses?.length > 0 && (
+              <div style={{ background: 'rgba(239,68,68,0.06)', border: '1px solid rgba(239,68,68,0.15)', borderRadius: 10, padding: 16, marginBottom: 12 }}>
+                <p style={{ color: '#FCA5A5', fontSize: 13, fontWeight: 700, marginBottom: 8 }}>⚠️ What you missed or could improve</p>
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                  {evaluation.feedback.weaknesses.map((w, i) => (
+                    <li key={i} style={{ color: '#94A3B8', fontSize: 13, marginBottom: 4 }}>• {w}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+
+            {/* Missing Concepts */}
+            {evaluation.feedback?.missingConcepts?.length > 0 && (
+              <div style={{ background: 'rgba(245,158,11,0.06)', border: '1px solid rgba(245,158,11,0.15)', borderRadius: 10, padding: 16, marginBottom: 12 }}>
+                <p style={{ color: '#FCD34D', fontSize: 13, fontWeight: 700, marginBottom: 8 }}>💡 Key concepts to include</p>
+                <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                  {evaluation.feedback.missingConcepts.map((c, i) => (
+                    <span key={i} style={{ padding: '3px 10px', borderRadius: 20, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.2)', color: '#FCD34D', fontSize: 12 }}>{c}</span>
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Model Answer */}
             {evaluation.feedback?.sampleAnswer && (
               <div style={{ background: 'rgba(99,102,241,0.06)', border: '1px solid rgba(99,102,241,0.15)', borderRadius: 10, padding: 16, marginBottom: 20 }}>
-                <p style={{ color: '#A5B4FC', fontSize: 13, fontWeight: 700, marginBottom: 8 }}>💡 Model Answer</p>
+                <p style={{ color: '#A5B4FC', fontSize: 13, fontWeight: 700, marginBottom: 8 }}>📖 Model Answer</p>
                 <p style={{ color: '#94A3B8', fontSize: 13, lineHeight: 1.7, margin: 0 }}>{evaluation.feedback.sampleAnswer}</p>
               </div>
             )}
@@ -494,7 +638,10 @@ const InterviewSession = ({ interview, inputMethod, onComplete }) => {
   );
 };
 
-// ---- Step 3: Results ----
+// ─────────────────────────────────────────────
+// Step 3: Results
+// ─────────────────────────────────────────────
+
 const ResultsView = ({ interviewId, results }) => {
   const navigate = useNavigate();
   const scores = results?.overallScores || {};
@@ -523,7 +670,7 @@ const ResultsView = ({ interviewId, results }) => {
         <h1 style={{ fontSize: 30, fontWeight: 900, fontFamily: 'Outfit, sans-serif', marginBottom: 8 }}>
           Interview <span className="gradient-text">Completed!</span>
         </h1>
-        <p style={{ color: '#64748B' }}>Here's your AI-powered performance analysis</p>
+        <p style={{ color: '#64748B' }}>Your performance analysis based on actual answers</p>
       </div>
 
       {/* Overall Score */}
@@ -531,14 +678,14 @@ const ResultsView = ({ interviewId, results }) => {
         <div style={{ fontSize: 72, fontWeight: 900, fontFamily: 'Outfit, sans-serif', color: scores.overall >= 70 ? '#10B981' : scores.overall >= 50 ? '#F59E0B' : '#EF4444', marginBottom: 8 }}>
           {scores.overall || 0}
         </div>
-        <p style={{ color: '#64748B', marginBottom: 24 }}>Overall Score</p>
+        <p style={{ color: '#64748B', marginBottom: 24 }}>Overall Score (out of 100)</p>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16, textAlign: 'left' }}>
           {[
             { label: 'Communication', value: scores.communication },
             { label: 'Technical Accuracy', value: scores.technicalAccuracy },
-            { label: 'Confidence', value: scores.confidence },
-            { label: 'Grammar', value: scores.grammar },
+            { label: 'Relevance', value: scores.confidence }, // stored as confidence for compat
+            { label: 'Completeness', value: scores.grammar }, // stored as grammar for compat
           ].map(({ label, value }) => (
             <div key={label}>
               <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 6 }}>
@@ -578,9 +725,12 @@ const ResultsView = ({ interviewId, results }) => {
   );
 };
 
-// ---- Main Interview Module ----
+// ─────────────────────────────────────────────
+// Main Interview Module
+// ─────────────────────────────────────────────
+
 const InterviewPage = () => {
-  const [step, setStep] = useState('setup'); // setup | session | results
+  const [step, setStep] = useState('setup');
   const [interviewData, setInterviewData] = useState(null);
   const [inputMethod, setInputMethod] = useState('text');
   const [results, setResults] = useState(null);

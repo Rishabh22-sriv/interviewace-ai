@@ -2,19 +2,25 @@ const mongoose = require('mongoose');
 
 const questionSchema = new mongoose.Schema({
   question: { type: String, required: true },
+  skill: { type: String, default: '' }, // exact skill/topic for this question
+  hint: { type: String, default: '' },
+  expectedConcepts: [String], // AI-generated expected concepts (not shown to user)
   answer: { type: String, default: '' },
   audioUrl: { type: String, default: '' },
   scores: {
     communication: { type: Number, default: 0 },
     technicalAccuracy: { type: Number, default: 0 },
-    confidence: { type: Number, default: 0 },
-    grammar: { type: Number, default: 0 },
+    confidence: { type: Number, default: 0 }, // stores 'relevance' (backward compat)
+    grammar: { type: Number, default: 0 }, // stores 'completeness' (backward compat)
+    relevance: { type: Number, default: 0 },
+    completeness: { type: Number, default: 0 },
     overall: { type: Number, default: 0 },
   },
   feedback: {
     strengths: [String],
     weaknesses: [String],
     improvements: [String],
+    missingConcepts: [String],
     sampleAnswer: { type: String, default: '' },
   },
   isEvaluated: { type: Boolean, default: false },
@@ -41,6 +47,10 @@ const interviewSchema = new mongoose.Schema(
     topic: {
       type: String,
       default: 'General',
+    },
+    targetRole: {
+      type: String,
+      default: '',
     },
     totalQuestions: {
       type: Number,

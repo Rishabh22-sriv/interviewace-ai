@@ -71,13 +71,27 @@ const uploadResume = async (req, res, next) => {
 
         await Resume.findByIdAndUpdate(resume._id, {
           atsScore: analysis.atsScore,
-          feedback: analysis.feedback,
+          // Store verified (from-resume) data separately from recommendations
+          verifiedSkills: analysis.verifiedSkills || [],
+          verifiedExperience: analysis.verifiedExperience || [],
+          verifiedProjects: analysis.verifiedProjects || [],
+          verifiedEducation: analysis.verifiedEducation || '',
+          feedback: {
+            ...analysis.feedback,
+            // Explicitly mark what's verified vs. recommended
+            missingSkills: analysis.feedback?.missingSkills || [],
+            keywordGaps: analysis.keywordGaps || [],
+            atsIssues: analysis.atsIssues || [],
+          },
           status: 'completed',
           analyzedAt: new Date(),
         });
       } catch (err) {
-        console.error('Resume analysis failed:', err.message);
-        await Resume.findByIdAndUpdate(resume._id, { status: 'failed' });
+        console.error('[Resume] Analysis failed:', err.message);
+        await Resume.findByIdAndUpdate(resume._id, { 
+          status: 'failed',
+          failureReason: err.message,
+        });
       }
     })();
   } catch (error) {

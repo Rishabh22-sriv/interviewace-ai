@@ -242,7 +242,7 @@ const ResumeAnalyzer = () => {
               </div>
 
               {/* Score & Summary */}
-              <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: 24, marginBottom: 24 }} className="grid-cols-1 md:grid-cols-[200px_1fr]">
+              <div style={{ display: 'grid', gridTemplateColumns: '200px 1fr', gap: 24, marginBottom: 24 }}>
                 <div className="glass-card-static" style={{ padding: 24 }}>
                   <ScoreGauge score={report.atsScore} />
                 </div>
@@ -261,16 +261,62 @@ const ResumeAnalyzer = () => {
                 </div>
               </div>
 
+              {/* VERIFIED FROM RESUME — clearly labeled */}
+              {(report.verifiedSkills?.length > 0 || report.verifiedProjects?.length > 0) && (
+                <div style={{ background: 'rgba(16,185,129,0.06)', border: '1px solid rgba(16,185,129,0.2)', borderRadius: 12, padding: 20, marginBottom: 20 }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
+                    <CheckCircle size={16} style={{ color: '#10B981' }} />
+                    <h3 style={{ fontSize: 15, fontWeight: 700, color: '#10B981', margin: 0 }}>Verified From Your Resume</h3>
+                    <span style={{ fontSize: 11, color: '#6EE7B7', background: 'rgba(16,185,129,0.1)', padding: '2px 8px', borderRadius: 10, fontWeight: 600 }}>FOUND IN DOCUMENT</span>
+                  </div>
+                  
+                  {report.verifiedSkills?.length > 0 && (
+                    <div style={{ marginBottom: 12 }}>
+                      <p style={{ color: '#6EE7B7', fontSize: 12, fontWeight: 700, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Skills Found</p>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
+                        {report.verifiedSkills.map(skill => (
+                          <span key={skill} style={{ padding: '4px 12px', borderRadius: 20, background: 'rgba(16,185,129,0.12)', border: '1px solid rgba(16,185,129,0.25)', color: '#6EE7B7', fontSize: 12, fontWeight: 500 }}>
+                            ✓ {skill}
+                          </span>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  
+                  {report.verifiedProjects?.length > 0 && (
+                    <div>
+                      <p style={{ color: '#6EE7B7', fontSize: 12, fontWeight: 700, marginBottom: 6, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Projects Found</p>
+                      <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                        {report.verifiedProjects.map((p, i) => (
+                          <li key={i} style={{ color: '#94A3B8', fontSize: 13, marginBottom: 4 }}>• {p}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
+                </div>
+              )}
+
               {/* Detailed Feedback */}
               <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
-                <FeedbackSection title="Strengths" items={report.feedback?.strengths} icon={Star} color="#10B981" emptyMsg="No strengths identified" />
-                <FeedbackSection title="Missing Skills" items={report.feedback?.missingSkills} icon={AlertCircle} color="#EF4444" emptyMsg="No missing skills detected" />
-                <FeedbackSection title="Grammar Issues" items={report.feedback?.grammarIssues} icon={AlertTriangle} color="#F59E0B" emptyMsg="No grammar issues found" />
+                <FeedbackSection title="Strengths (Based on Resume Content)" items={report.feedback?.strengths} icon={Star} color="#10B981" emptyMsg="No strengths identified" />
+                <FeedbackSection title="Skills NOT in Resume (Recommended to Add)" items={report.feedback?.missingSkills} icon={AlertCircle} color="#EF4444" emptyMsg="No missing skills detected" />
+                <FeedbackSection title="Keyword Gaps (ATS Keywords Missing)" items={report.feedback?.keywordGaps} icon={AlertTriangle} color="#F59E0B" emptyMsg="No keyword gaps found" />
+                <FeedbackSection title="ATS Formatting Issues" items={report.feedback?.atsIssues} icon={AlertTriangle} color="#F59E0B" emptyMsg="No ATS issues found" />
                 <FeedbackSection title="Suggested Improvements" items={report.feedback?.suggestedImprovements} icon={TrendingUp} color="#6366F1" emptyMsg="No suggestions" />
-                <FeedbackSection title="Recommended Technologies" items={report.feedback?.recommendedTechnologies} icon={Cpu} color="#06B6D4" emptyMsg="No recommendations" />
-                <FeedbackSection title="Recommended Projects" items={report.feedback?.recommendedProjects} icon={FolderOpen} color="#EC4899" emptyMsg="No project recommendations" />
+                <FeedbackSection title="Grammar & Formatting" items={report.feedback?.grammarIssues} icon={AlertTriangle} color="#EC4899" emptyMsg="No grammar issues found" />
               </div>
             </motion.div>
+          )}
+          
+          {report && report.status === 'failed' && (
+            <div style={{ textAlign: 'center', padding: '40px 20px', background: 'rgba(239,68,68,0.06)', borderRadius: 12, border: '1px solid rgba(239,68,68,0.15)' }}>
+              <AlertCircle size={40} style={{ color: '#EF4444', margin: '0 auto 12px', display: 'block' }} />
+              <p style={{ color: '#FCA5A5', fontWeight: 600, marginBottom: 6 }}>Analysis Failed</p>
+              <p style={{ color: '#64748B', fontSize: 13, marginBottom: 16 }}>The AI could not analyze this resume. Please ensure the PDF contains readable text (not a scanned image).</p>
+              <button onClick={() => { setReport(null); setResumeId(null); }} className="btn-primary" style={{ padding: '10px 20px' }}>
+                <RefreshCw size={14} /> Try Again
+              </button>
+            </div>
           )}
         </>
       )}
